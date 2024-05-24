@@ -6,3 +6,4 @@ langchain_community
 chromadb
 tiktoken
 unstructured
+vectorstore
