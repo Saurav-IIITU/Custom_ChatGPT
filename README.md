@@ -1,7 +1,8 @@
 # Conversational-chatgpt
 
 Simple script to use ChatGPT on your files.
-# Demo: https://customchatgpt-mqzmikehivdehitg5aw8ko.streamlit.app/
+# Demo: 
+https://customchatgpt-mqzmikehivdehitg5aw8ko.streamlit.app/
 
 ## Installation
 
