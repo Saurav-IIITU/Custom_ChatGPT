@@ -49,34 +49,39 @@ if uploaded_files:
             text_data.append(temp_text_file.name)
 
     loaders = [TextLoader(file_path) for file_path in text_data]
-    
-    if PERSIST and os.path.exists("persist"):
-        st.write("Reusing index...\n")
-        vectorstore = Chroma(persist_directory="persist", embedding_function=OpenAIEmbeddings())
-        index = VectorStoreIndexWrapper(vectorstore=vectorstore)
-    else:
-        if PERSIST:
-            index = VectorstoreIndexCreator(vectorstore_kwargs={"persist_directory": "persist"}).from_loaders(loaders)
+
+    try:
+        if PERSIST and os.path.exists("persist"):
+            st.write("Reusing index...\n")
+            vectorstore = Chroma(persist_directory="persist", embedding_function=OpenAIEmbeddings())
+            index = VectorStoreIndexWrapper(vectorstore=vectorstore)
         else:
-            index = VectorstoreIndexCreator().from_loaders(loaders)
-    
-    chain = ConversationalRetrievalChain.from_llm(
-        llm=ChatOpenAI(model="gpt-3.5-turbo"),
-        retriever=index.vectorstore.as_retriever(search_kwargs={"k": 1}),
-    )
+            if PERSIST:
+                index = VectorstoreIndexCreator(vectorstore_kwargs={"persist_directory": "persist"}).from_loaders(loaders)
+            else:
+                index = VectorstoreIndexCreator().from_loaders(loaders)
 
-    if 'chat_history' not in st.session_state:
-        st.session_state.chat_history = []
+        chain = ConversationalRetrievalChain.from_llm(
+            llm=ChatOpenAI(model="gpt-3.5-turbo"),
+            retriever=index.vectorstore.as_retriever(search_kwargs={"k": 1}),
+        )
 
-    query = st.text_input("Enter your question:")
+        if 'chat_history' not in st.session_state:
+            st.session_state.chat_history = []
 
-    if query:
-        result = chain({"question": query, "chat_history": st.session_state.chat_history})
-        st.write(result['answer'])
+        query = st.text_input("Enter your question:")
 
-        st.session_state.chat_history.append((query, result['answer']))
+        if query:
+            result = chain({"question": query, "chat_history": st.session_state.chat_history})
+            st.write(result['answer'])
 
-    if st.button("Clear History"):
-        st.session_state.chat_history = []
+            st.session_state.chat_history.append((query, result['answer']))
+
+        if st.button("Clear History"):
+            st.session_state.chat_history = []
+
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+
 else:
     st.write("Please upload PDF files to proceed.")
