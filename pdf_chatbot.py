@@ -59,7 +59,7 @@ if uploaded_files:
             index = VectorstoreIndexCreator(vectorstore_kwargs={"persist_directory": "persist"}).from_loaders(loaders)
         else:
             # index = VectorstoreIndexCreator().from_loaders(loaders)
-            print(ok)
+            print("ok")
     
     chain = ConversationalRetrievalChain.from_llm(
         llm=ChatOpenAI(model="gpt-3.5-turbo"),
