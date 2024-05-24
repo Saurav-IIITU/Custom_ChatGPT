@@ -1,5 +1,6 @@
 import os
-import fitz  # PyMuPDF
+import openai
+import fitz  
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chat_models import ChatOpenAI
 from langchain.document_loaders import TextLoader
@@ -47,47 +48,35 @@ if uploaded_files:
             temp_text_file.write(text.encode())
             text_data.append(temp_text_file.name)
 
-    # Check if text files are correctly created
-    for text_file in text_data:
-        st.write(f"Text file created: {text_file}")
-        with open(text_file, 'r') as file:
-            st.write(file.read())  # Display the content for debugging
-
     loaders = [TextLoader(file_path) for file_path in text_data]
     
-    try:
-        if PERSIST and os.path.exists("persist"):
-            st.write("Reusing index...\n")
-            vectorstore = Chroma(persist_directory="persist", embedding_function=OpenAIEmbeddings())
-            index = VectorStoreIndexWrapper(vectorstore=vectorstore)
+    if PERSIST and os.path.exists("persist"):
+        st.write("Reusing index...\n")
+        vectorstore = Chroma(persist_directory="persist", embedding_function=OpenAIEmbeddings())
+        index = VectorStoreIndexWrapper(vectorstore=vectorstore)
+    else:
+        if PERSIST:
+            index = VectorstoreIndexCreator(vectorstore_kwargs={"persist_directory": "persist"}).from_loaders(loaders)
         else:
-            if PERSIST:
-                index = VectorstoreIndexCreator(vectorstore_kwargs={"persist_directory": "persist"}).from_loaders(loaders)
-            else:
-                index = VectorstoreIndexCreator().from_loaders(loaders)
-    except Exception as e:
-        st.error(f"Error creating index: {e}")
+            index = VectorstoreIndexCreator().from_loaders(loaders)
     
-    try:
-        chain = ConversationalRetrievalChain.from_llm(
-            llm=ChatOpenAI(model="gpt-3.5-turbo"),
-            retriever=index.vectorstore.as_retriever(search_kwargs={"k": 1}),
-        )
+    chain = ConversationalRetrievalChain.from_llm(
+        llm=ChatOpenAI(model="gpt-3.5-turbo"),
+        # retriever=index.vectorstore.as_retriever(search_kwargs={"k": 1}),
+    )
 
-        if 'chat_history' not in st.session_state:
-            st.session_state.chat_history = []
+    if 'chat_history' not in st.session_state:
+        st.session_state.chat_history = []
 
-        query = st.text_input("Enter your question:")
+    query = st.text_input("Enter your question:")
 
-        if query:
-            result = chain({"question": query, "chat_history": st.session_state.chat_history})
-            st.write(result['answer'])
+    if query:
+        result = chain({"question": query, "chat_history": st.session_state.chat_history})
+        st.write(result['answer'])
 
-            st.session_state.chat_history.append((query, result['answer']))
+        st.session_state.chat_history.append((query, result['answer']))
 
-        if st.button("Clear History"):
-            st.session_state.chat_history = []
-    except Exception as e:
-        st.error(f"Error running chain: {e}")
+    if st.button("Clear History"):
+        st.session_state.chat_history = []
 else:
     st.write("Please upload PDF files to proceed.")
