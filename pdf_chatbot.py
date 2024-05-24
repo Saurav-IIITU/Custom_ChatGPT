@@ -54,11 +54,11 @@ if uploaded_files:
         st.write("Reusing index...\n")
         vectorstore = Chroma(persist_directory="persist", embedding_function=OpenAIEmbeddings())
         index = VectorStoreIndexWrapper(vectorstore=vectorstore)
-    # else:
-    #     if PERSIST:
-    #         index = VectorstoreIndexCreator(vectorstore_kwargs={"persist_directory": "persist"}).from_loaders(loaders)
-    #     else:
-    #         index = VectorstoreIndexCreator().from_loaders(loaders)
+    else:
+        if PERSIST:
+            index = VectorstoreIndexCreator(vectorstore_kwargs={"persist_directory": "persist"}).from_loaders(loaders)
+        else:
+            index = VectorstoreIndexCreator().from_loaders(loaders)
     
     chain = ConversationalRetrievalChain.from_llm(
         llm=ChatOpenAI(model="gpt-3.5-turbo"),
