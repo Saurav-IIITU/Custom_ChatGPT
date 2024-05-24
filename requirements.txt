@@ -2,3 +2,4 @@ streamlit
 PyMuPDF
 openai
 langchain
+langchain_community
