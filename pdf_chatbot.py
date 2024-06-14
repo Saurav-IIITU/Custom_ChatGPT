@@ -81,6 +81,10 @@ if uploaded_files:
             st.write(result['answer'])
 
             st.session_state.chat_history.append((query, result['answer']))
+            # Citation References
+            st.write("Citations:")
+            for doc in result['source_documents']:
+                st.write(f"Source: {doc.metadata['source']}")
 
         if st.button("Clear History"):
             st.session_state.chat_history = []
